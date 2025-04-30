@@ -1,11 +1,9 @@
-<script setup>
-
-</script>
+<script setup></script>
 
 <template>
   <h2 class="text-center text-h3 my-5 font-weight-bold">Administration Panel</h2>
+
+  <v-btn color="blue" variant="flat" :to="{ name: 'new-property' }"> New Property </v-btn>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

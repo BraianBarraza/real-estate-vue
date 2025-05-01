@@ -1,6 +1,6 @@
 <script setup>
-import { doc, setDoc } from 'firebase/firestore'
-import {useFirestore} from 'vuefire'
+import { collection, addDoc } from 'firebase/firestore'
+import { useFirestore } from 'vuefire'
 import { useForm, useField } from 'vee-validate'
 import { validationSchema, imageSchema } from '@/validation/propertySchema.js'
 
@@ -11,8 +11,8 @@ const db = useFirestore()
 const { handleSubmit } = useForm({
   validationSchema: {
     ...validationSchema,
-    ...imageSchema,
-  },
+    ...imageSchema
+  }
 })
 
 const title = useField('title')
@@ -28,14 +28,23 @@ const basement = useField('basement')
 const garden = useField('garden')
 
 const submit = handleSubmit(async (values) => {
-  // Add a new document in collection "cities"
-  await setDoc(doc(db, 'properties', 'LA'), {
-    name: 'Los Angeles',
-    state: 'CA',
-    country: 'USA',
-  })
-  console.log(values)
+
+  const { image, ...property } = values
+
+  try {
+    const docRef = await addDoc(collection(db, "properties"), {
+      ...property
+    });
+
+    console.log("Document written with ID: ", docRef.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
 })
+
+
+
+
 </script>
 
 <template>

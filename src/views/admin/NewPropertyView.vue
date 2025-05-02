@@ -2,10 +2,15 @@
 import { collection, addDoc } from 'firebase/firestore'
 import { useFirestore } from 'vuefire'
 import { useForm, useField } from 'vee-validate'
+import { useRouter } from 'vue-router'
 import { validationSchema, imageSchema } from '@/validation/propertySchema.js'
+import useImage from '@/composable/useImage.js'
 
 const items = [1, 2, 3, 4, 5, 6]
 
+const { url, uploadImage, imagePreview } = useImage()
+
+const router = useRouter()
 const db = useFirestore()
 
 const { handleSubmit } = useForm({
@@ -23,26 +28,25 @@ const wc = useField('wc')
 const parkingSpots = useField('parkingSpots')
 const description = useField('description')
 
-const pool = useField('pool')
-const basement = useField('basement')
-const garden = useField('garden')
+const pool = useField('pool', null, { initialValue: false })
+const basement = useField('basement', null, { initialValue: false })
+const garden = useField('garden', null, { initialValue: false })
 
 const submit = handleSubmit(async (values) => {
-
   const { image, ...property } = values
 
   try {
-    const docRef = await addDoc(collection(db, "properties"), {
-      ...property
-    });
-
-    console.log("Document written with ID: ", docRef.id);
+    const docRef = await addDoc(collection(db, 'properties'), {
+      ...property,
+      image : url.value
+    })
+    if (docRef.id) {
+      await router.push({ name: `admin-properties` })
+    }
   } catch (e) {
-    console.error("Error adding document: ", e);
+    console.error('Error adding document: ', e)
   }
 })
-
-
 
 
 </script>
@@ -66,7 +70,13 @@ const submit = handleSubmit(async (values) => {
         class="mb-5"
         v-model="image.value.value"
         :error-messages="image.errorMessage.value"
+        @change="uploadImage"
       />
+
+      <div v-if="imagePreview" class="my-5">
+        <p class="font-weight-bold">Property image:</p>
+        <img class="w-50" :src="imagePreview" :alt="title.value.value" />
+      </div>
 
       <v-text-field
         class="mb-5"

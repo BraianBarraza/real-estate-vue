@@ -5,10 +5,14 @@ import { useForm, useField } from 'vee-validate'
 import { useRouter } from 'vue-router'
 import { validationSchema, imageSchema } from '@/validation/propertySchema.js'
 import useImage from '@/composable/useImage.js'
+import useLocationMap from '@/composable/useLocationMap.js'
+import 'leaflet/dist/leaflet.css'
+import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 
 const items = [1, 2, 3, 4, 5, 6]
 
 const { url, uploadImage, imagePreview } = useImage()
+const { zoom, center, pin } = useLocationMap()
 
 const router = useRouter()
 const db = useFirestore()
@@ -38,7 +42,8 @@ const submit = handleSubmit(async (values) => {
   try {
     const docRef = await addDoc(collection(db, 'properties'), {
       ...property,
-      image : url.value
+      image: url.value,
+      location: center.value
     })
     if (docRef.id) {
       await router.push({ name: `admin-properties` })
@@ -133,6 +138,26 @@ const submit = handleSubmit(async (values) => {
           <v-checkbox label="Garden" v-model="garden.value.value" />
         </v-col>
       </v-row>
+
+      <h2 class="font-weight-bold text-center my-5">House Location</h2>
+      <div class="pb-10">
+        <div style="height:600px">
+          <LMap
+            v-model:zoom="zoom"
+            :center="center"
+            :useGlobal-leaflet="false">
+
+            <LMarker
+              :lat-lng="center"
+              draggable
+              @moveend="pin"
+            />
+            <LTileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            ></LTileLayer>
+          </LMap>
+        </div>
+      </div>
 
       <v-btn color="pink-accent-3" block @click="submit">Add property</v-btn>
     </v-form>

@@ -1,6 +1,6 @@
 <script setup>
 import { watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useFirestore, useDocument } from 'vuefire'
 import { updateDoc, doc } from 'firebase/firestore'
 import { useField, useForm } from 'vee-validate'
@@ -9,8 +9,8 @@ import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import useImage from '@/composable/useImage.js'
 import useLocationMap from '@/composable/useLocationMap.js'
 import { validationSchema } from '@/validation/propertySchema.js'
-// defines title, price, bedrooms, wc, parkingSpots, description :contentReference[oaicite:0]{index=0}
 
+// defines title, price, bedrooms, wc, parkingSpots, description :contentReference[oaicite:0]{index=0}
 const items = [1, 2, 3, 4, 5]
 
 const { url, uploadImage, imagePreview } = useImage()
@@ -30,31 +30,42 @@ const basement = useField('basement')
 const garden = useField('garden')
 
 const route = useRoute()
+const router = useRouter()
 
 //get the property to edit
 const db = useFirestore()
 const docRef = doc(db, 'properties', route.params.id)
 const property = useDocument(docRef)
 
-  console.log(property)
 watch(property, (property) => {
   title.value.value = property.title
   price.value.value = property.price
   bedrooms.value.value = property.bedrooms
   wc.value.value = property.wc
   parkingSpots.value.value = property.parkingSpots
-  description.value.value = property.description
   pool.value.value = property.pool
+  description.value.value = property.description
   basement.value.value = property.basement
   garden.value.value = property.garden
-
-  image.value.value = property.image
   center.value = property.location
-
 })
 
-const submit = handleSubmit(values => {
+const submit = handleSubmit(async (values) => {
+  const { image, ...property } = values
+  let imageUrl = property.imagePreview || url.value
 
+  if (image.value) {
+    uploadImage({ target: { files: [image.value] } })
+    imageUrl = url.value
+  }
+  const data = {
+    ...property,
+    image: imageUrl,
+    location: center.value,
+  }
+
+  await updateDoc(docRef, data)
+  router.push({ name: 'admin-properties' })
 })
 </script>
 
@@ -87,10 +98,10 @@ const submit = handleSubmit(values => {
 
       <div class="my-5">
         <p class="font-weight-bold">Current Image:</p>
-        <img
-          class="w-50"
-          :src="property?.image"
-          :alt="title.value.value" />
+
+        <img v-if="imagePreview" class="w-50" :src="imagePreview" :alt="title.value.value" />
+
+        <img v-else class="w-50" :src="property?.image" :alt="title.value.value" />
       </div>
 
       <v-text-field
@@ -161,8 +172,7 @@ const submit = handleSubmit(values => {
         </div>
       </div>
 
-      <v-btn color="pink-accent-3" block @click="submit"> Save Changes </v-btn>
-
+      <v-btn color="pink-accent-3" block @click="submit"> Save Changes</v-btn>
     </v-form>
   </v-card>
 </template>

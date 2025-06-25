@@ -1,7 +1,8 @@
 <script setup>
 import useProperties from '@/composable/useProperties.js'
+import { priceFormat } from '@/helpers/index.js'
 
-const { propertiesCollection, priceFormat } = useProperties()
+const { propertiesCollection } = useProperties()
 </script>
 
 <template>

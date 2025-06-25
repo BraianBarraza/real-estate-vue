@@ -1,8 +1,9 @@
 <script setup>
 import useProperties from '@/composable/useProperties.js'
-import Property from '@/components/Property.vue'
+import PropertyCard from '@/components/Property-card.vue'
+import { priceFormat } from '@/helpers/index.js'
 
-const {propertiesCollection} = useProperties()
+const {propertiesCollection } = useProperties()
 </script>
 
 <template>
@@ -10,11 +11,11 @@ const {propertiesCollection} = useProperties()
 
   <v-card flat class="py-10">
     <v-row>
-      <Property
+      <PropertyCard
         v-for="property in propertiesCollection"
         :key="property.id"
         :property="property"
-        :price="property.price"
+        :price="priceFormat"
       />
     </v-row>
 

@@ -2,7 +2,7 @@
 import useProperties from '@/composable/useProperties.js'
 import { priceFormat } from '@/helpers/index.js'
 
-const { propertiesCollection } = useProperties()
+const { propertiesCollection, deleteItem } = useProperties()
 </script>
 
 <template>
@@ -23,14 +23,15 @@ const { propertiesCollection } = useProperties()
         <v-list-item-subtitle>{{ priceFormat(property.price) }}</v-list-item-subtitle>
 
         <template v-slot:append>
-          <v-btn color="info"
-                 class="mr-2"
-                 :to="{ name: 'edit-property', params:{id:property.id} }"
+          <v-btn
+            color="info"
+            class="mr-2"
+            :to="{ name: 'edit-property', params: { id: property.id } }"
           >
             Edit
           </v-btn>
 
-          <v-btn color="red-darken-3"> Delete </v-btn>
+          <v-btn color="red-darken-3" @click="deleteItem(property.id, property.image)"> Delete </v-btn>
         </template>
       </v-list-item>
     </v-list>

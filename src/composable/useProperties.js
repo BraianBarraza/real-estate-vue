@@ -21,7 +21,7 @@ export default function useProperties() {
 
       await Promise.all([deleteDoc(docRef), deleteObject(imageRef)])
 
-      alert(`Item ${id} was successfully deleted`)
+      alert(`Item with ${id}, was successfully deleted`)
     }
   }
 

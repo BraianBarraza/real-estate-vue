@@ -1,21 +1,25 @@
 <script setup>
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useFirestore, useDocument } from 'vuefire'
+import { useFirestore, useDocument, useFirebaseStorage } from 'vuefire'
 import { updateDoc, doc } from 'firebase/firestore'
 import { useField, useForm } from 'vee-validate'
 import 'leaflet/dist/leaflet.css'
-import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
+import {
+  LMap,
+  LTileLayer,
+  LMarker
+} from '@vue-leaflet/vue-leaflet'
 import useImage from '@/composable/useImage.js'
 import useLocationMap from '@/composable/useLocationMap.js'
 import { validationSchema } from '@/validation/propertySchema.js'
+import { deleteObject, ref as storageRef } from 'firebase/storage'
 
 // defines title, price, bedrooms, wc, parkingSpots, description :contentReference[oaicite:0]{index=0}
 const items = [1, 2, 3, 4, 5]
 
 const { url, uploadImage, imagePreview } = useImage()
 const { zoom, center, pin } = useLocationMap()
-
 const { handleSubmit } = useForm({ validationSchema })
 
 const title = useField('title')
@@ -36,6 +40,9 @@ const router = useRouter()
 const db = useFirestore()
 const docRef = doc(db, 'properties', route.params.id)
 const property = useDocument(docRef)
+const storage = useFirebaseStorage()
+
+const oldImageUrl = ref('')
 
 watch(property, (property) => {
   title.value.value = property.title
@@ -48,25 +55,32 @@ watch(property, (property) => {
   basement.value.value = property.basement
   garden.value.value = property.garden
   center.value = property.location
+  oldImageUrl.value = property.image
 })
 
 const submit = handleSubmit(async (values) => {
   const { image, ...property } = values
-  let imageUrl = property.imagePreview || url.value
-
-  if (image.value) {
-    uploadImage({ target: { files: [image.value] } })
-    imageUrl = url.value
+  if (imagePreview.value) {
+    const data = {
+      ...property,
+      image: url.value,
+      location: center.value,
+    }
+    const oldImageRef = storageRef(storage, oldImageUrl.value)
+    await Promise.all([
+      deleteObject(oldImageRef),
+      updateDoc(docRef, data)
+    ])
+  } else {
+    const data = {
+      ...property,
+      location: center.value,
+    }
+    await updateDoc(docRef, data)
   }
-  const data = {
-    ...property,
-    image: imageUrl,
-    location: center.value,
-  }
-
-  await updateDoc(docRef, data)
   router.push({ name: 'admin-properties' })
 })
+
 </script>
 
 <template>

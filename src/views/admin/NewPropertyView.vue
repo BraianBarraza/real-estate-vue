@@ -38,19 +38,14 @@ const garden = useField('garden', null, { initialValue: false })
 
 const submit = handleSubmit(async (values) => {
   const { image, ...property } = values
-
-  try {
     const docRef = await addDoc(collection(db, 'properties'), {
       ...property,
       image: url.value,
       location: center.value
-    })
+    });
     if (docRef.id) {
       await router.push({ name: `admin-properties` })
     }
-  } catch (e) {
-    console.error('Error adding document: ', e)
-  }
 })
 
 
